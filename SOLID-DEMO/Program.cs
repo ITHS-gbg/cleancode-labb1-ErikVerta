@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Server.DataAccess;
+using Server.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,7 @@ builder.Services.AddDbContext<ShopContext>(options =>
     var connectionString = builder.Configuration.GetConnectionString("UsersDb");
     options.UseSqlServer(connectionString);
 });
+builder.Services.AddSingleton<IUnitOfWork, UnitOfWork>();
 
 var app = builder.Build();
 

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Server.DataAccess;
+using Server.Interfaces;
 using Shared;
 
 namespace Server.Controllers
@@ -10,23 +11,23 @@ namespace Server.Controllers
     [Route("[controller]")]
     public class CustomerController : ControllerBase
     {
-        private ShopContext ShopContext { get; set; }
+        private IUnitOfWork UnitOfWork { get; }
 
-        public CustomerController(ShopContext shopContext)
+        public CustomerController(IUnitOfWork unitOfWork)
         {
-            ShopContext = shopContext;
+            UnitOfWork = unitOfWork;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetCustomers()
         {
-            return Ok(await ShopContext.Customers.ToListAsync());
+            return Ok(await UnitOfWork.CustomerRepository.GetAllAsync());
         }
 
-        [HttpGet("{email}")]
-        public async Task<IActionResult> GetCustomer(string email)
+        [HttpGet("{name}")]
+        public async Task<IActionResult> GetCustomer(string name)
         {
-            return Ok(await ShopContext.Customers.FirstOrDefaultAsync(c => c.Name.Equals(email)));
+            return Ok(await UnitOfWork.CustomerRepository.GetAsync(name));
         }
 
         [HttpPost("register")]
@@ -34,15 +35,16 @@ namespace Server.Controllers
         {
             if (!customer.Name.Contains("@"))
                 throw new ValidationException("Email is not an email");
-            await ShopContext.AddAsync(customer);
-            await ShopContext.SaveChangesAsync();
+            await UnitOfWork.CustomerRepository.CreateAsync(customer);
+            await UnitOfWork.SaveAsync();
             return Ok();
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> LoginCustomer(string email, string password)
         {
-            var customer = await ShopContext.Customers.FirstOrDefaultAsync(c => c.Name.Equals(email) && c.Password.Equals(password));
+            var customers = await UnitOfWork.CustomerRepository.GetAllAsync();
+            var customer = customers.FirstOrDefault(c => c.Name.Equals(email) && c.Password.Equals(password));
             if (customer is not null)
             {
                 return Ok();
@@ -53,11 +55,12 @@ namespace Server.Controllers
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteCustomer(int id)
         {
-            var customer = await ShopContext.Customers.FirstOrDefaultAsync(c => c.Id == id);
+            var customers = await UnitOfWork.CustomerRepository.GetAllAsync();
+            var customer = customers.FirstOrDefault(c => c.Id == id);
             if (customer is null) return BadRequest();
 
-            ShopContext.Customers.Remove(customer);
-            await ShopContext.SaveChangesAsync();
+            await UnitOfWork.CustomerRepository.DeleteAsync(customer);
+            await UnitOfWork.SaveAsync();
             return Ok();
         }
     }
