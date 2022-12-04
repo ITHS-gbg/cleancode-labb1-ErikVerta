@@ -1,6 +1,8 @@
-﻿namespace Server.Interfaces
+﻿using Shared;
+
+namespace Server.Interfaces
 {
-    public interface IRepository<T> where T : class
+    public interface IRepository<T> where T : EntityBase
     {
         public Task<IEnumerable<T>> GetAllAsync();
         public Task CreateAsync(T entity);

@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Server.DataAccess;
+using Server.Interfaces;
 using Shared;
 
 namespace Server.Controllers
@@ -9,37 +8,44 @@ namespace Server.Controllers
     [Route("[controller]")]
     public class ProductController: ControllerBase
     {
-        private ShopContext ShopContext { get; set; }
+        private IProductService ProductService { get; set; } 
 
-        public ProductController(ShopContext shopContext)
+        public ProductController(IProductService productService)
         {
-            ShopContext = shopContext;
+            ProductService = productService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetProducts()
         {
-            return Ok(await ShopContext.Products.ToListAsync());
+            return Ok(await ProductService.GetProducts());
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProduct(int id)
         {
-            return Ok(await ShopContext.Products.FirstOrDefaultAsync(c => c.Name.Equals(id)));
+            var product = await ProductService.GetProduct(id);
+            if (product is null)
+            {
+                return NotFound("product does not exist");
+            }
+
+            return Ok();
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddProduct(Product newProd)
+        public async Task<IActionResult> AddProduct(Product newProduct)
         {
-            var prod = await ShopContext.Products.FirstOrDefaultAsync(p => p.Name.Equals(newProd.Name));
-            if (prod == null)
+            try
             {
-                await ShopContext.Products.AddAsync(newProd);
-                await ShopContext.SaveChangesAsync();
-                return Ok();
+                await ProductService.CreateProduct(newProduct);
+            }
+            catch (Exception exception)
+            {
+                return BadRequest(exception.Message);
             }
 
-            return BadRequest();
+            return Ok();
         }
     }
 }

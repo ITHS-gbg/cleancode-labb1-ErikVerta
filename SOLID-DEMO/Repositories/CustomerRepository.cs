@@ -1,4 +1,5 @@
-﻿using Server.DataAccess;
+﻿using Microsoft.EntityFrameworkCore;
+using Server.DataAccess;
 using Shared;
 
 namespace Server.Repositories
@@ -8,16 +9,21 @@ namespace Server.Repositories
         public CustomerRepository(ShopContext shopContext) : base(shopContext)
         {
         }
-
-        public async Task<T> GetAsync(string name)
+        public override async Task<IEnumerable<T>> GetAllAsync()
         {
-            return _dbSet.FirstOrDefault(c => c.Name == name);
+            return await _dbSet.ToListAsync();
         }
 
-        public override async Task UpdateAsync(T entity, int id)
+        public async Task<T> GetAsync(string email)
         {
-            var customer = _dbSet.FirstOrDefault(c => c.Id == id);
-            customer = entity;
+            return _dbSet.FirstOrDefault(c => c.Email == email);
         }
+
+        public async Task<T> GetAsync(int id)
+        {
+            return _dbSet.FirstOrDefault(c => c.Id == id);
+        }
+
+
     }
 }

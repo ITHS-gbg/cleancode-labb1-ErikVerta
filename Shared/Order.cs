@@ -1,9 +1,8 @@
 ﻿namespace Shared;
 
-public class Order
+public class Order : EntityBase
 {
-    public int Id { get; set; }
-    public List<Product> Products { get; set; }
+    public List<OrderItem> OrderItems{ get; set; }
     public Customer Customer { get; set; }
     public DateTime ShippingDate { get; set; }
 }

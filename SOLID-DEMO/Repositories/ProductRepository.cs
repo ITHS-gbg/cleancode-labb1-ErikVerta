@@ -1,4 +1,5 @@
-﻿using Server.DataAccess;
+﻿using Microsoft.EntityFrameworkCore;
+using Server.DataAccess;
 using Shared;
 
 namespace Server.Repositories
@@ -9,14 +10,14 @@ namespace Server.Repositories
         {
         }
 
+        public override async Task<IEnumerable<T>> GetAllAsync()
+        {
+            return await _dbSet.ToListAsync();
+        }
+
         public async Task<T> GetAsync(int id)
         {
             return _dbSet.FirstOrDefault(p => p.Id == id);
-        }
-        public override async Task UpdateAsync(T entity, int id)
-        {
-            var product = _dbSet.FirstOrDefault(p => p.Id == id);
-            product = entity;
         }
     }
 }

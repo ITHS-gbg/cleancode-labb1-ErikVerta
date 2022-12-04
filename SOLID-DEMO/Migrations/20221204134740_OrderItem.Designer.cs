@@ -9,11 +9,11 @@ using Server.DataAccess;
 
 #nullable disable
 
-namespace SOLIDDEMO.Migrations
+namespace Server.Migrations
 {
     [DbContext(typeof(ShopContext))]
-    [Migration("20221116204437_renameCustomer")]
-    partial class renameCustomer
+    [Migration("20221204134740_OrderItem")]
+    partial class OrderItem
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -43,7 +43,7 @@ namespace SOLIDDEMO.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Customers");
                 });
 
             modelBuilder.Entity("Shared.Order", b =>
@@ -57,11 +57,32 @@ namespace SOLIDDEMO.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("ShippingDate")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerId");
 
                     b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("Shared.OrderItem", b =>
+                {
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.HasKey("OrderId", "ProductId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("OrderItem");
                 });
 
             modelBuilder.Entity("Shared.Product", b =>
@@ -80,12 +101,7 @@ namespace SOLIDDEMO.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("OrderId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("OrderId");
 
                     b.ToTable("Products");
                 });
@@ -101,16 +117,28 @@ namespace SOLIDDEMO.Migrations
                     b.Navigation("Customer");
                 });
 
-            modelBuilder.Entity("Shared.Product", b =>
+            modelBuilder.Entity("Shared.OrderItem", b =>
                 {
-                    b.HasOne("Shared.Order", null)
-                        .WithMany("Products")
-                        .HasForeignKey("OrderId");
+                    b.HasOne("Shared.Order", "Order")
+                        .WithMany("OrderItems")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Shared.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("Shared.Order", b =>
                 {
-                    b.Navigation("Products");
+                    b.Navigation("OrderItems");
                 });
 #pragma warning restore 612, 618
         }
