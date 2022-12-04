@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Server.DataAccess;
+using Server.Interfaces;
+using Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +17,10 @@ builder.Services.AddDbContext<ShopContext>(options =>
     var connectionString = builder.Configuration.GetConnectionString("UsersDb");
     options.UseSqlServer(connectionString);
 });
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IProductService, ProductService>();
 
 var app = builder.Build();
 

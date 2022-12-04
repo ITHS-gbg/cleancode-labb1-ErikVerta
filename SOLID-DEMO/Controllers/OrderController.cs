@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Server.DataAccess;
+using Server.Interfaces;
 using Shared;
 
 namespace Server.Controllers
@@ -9,24 +8,24 @@ namespace Server.Controllers
     [Route("[controller]")]
     public class OrderController: ControllerBase
     {
-        private ShopContext ShopContext { get; set; }
+        private IOrderService OrderService { get; set; }
 
-        public OrderController(ShopContext shopContext)
+        public OrderController(IOrderService orderService)
         {
-            ShopContext = shopContext;
+            OrderService = orderService;
         }
         [HttpGet]
         public async Task<IActionResult> GetAllOrders()
         {
-            var orders = await ShopContext.Orders.Include(o => o.Customer).Include(o => o.Products).ToListAsync();
+            var orders = await OrderService.GetAllOrders();
             return Ok(orders);
         }
 
         [HttpGet("customer/{id}")]
         public async Task<IActionResult> GetOrdersForCustomer(int id)
         {
-            var orders = await ShopContext.Orders.Include(o => o.Customer).Where(c => c.Customer.Id == id).Include(o => o.Products).ToListAsync();
-            if (orders.Count == 0)
+            var orders = await OrderService.GetOrdersForCustomer(id);
+            if (!orders.Any())
             {
                 return NotFound();
             }
@@ -36,30 +35,14 @@ namespace Server.Controllers
         [HttpPost]
         public async Task<IActionResult> PlaceOrder(CustomerCart cart)
         {
-            var customer = await ShopContext.Customers.FirstOrDefaultAsync(c => c.Id.Equals(cart.CustomerId));
-            if (customer is null)
+            try
             {
-                return BadRequest();
+                await OrderService.CreateOrder(cart);
             }
-
-            var products = new List<Product>();
-
-            foreach (var prodId in cart.ProductIds)
+            catch (NullReferenceException exception)
             {
-                var prod = await ShopContext.Products.FirstOrDefaultAsync(p => p.Id == prodId);
-                if (prod is null)
-                {
-                    return NotFound();
-                }
-                products.Add(prod);
+                return NotFound(exception.Message);
             }
-
-            var order = new Order() { Customer = customer, Products = products };
-            var now = DateTime.Now;
-            order.ShippingDate = now.AddDays(5);
-
-            await ShopContext.Orders.AddAsync(order);
-            await ShopContext.SaveChangesAsync();
 
             return Ok();
         }
@@ -67,42 +50,28 @@ namespace Server.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> CancelOrder(int id)
         {
-            var order = await ShopContext.Orders.FirstOrDefaultAsync(o => o.Id == id);
-            if (order is null)
+            try
             {
-                return NotFound();
+                await OrderService.DeleteOrder(id);
             }
-
-            ShopContext.Orders.Remove(order);
-            await ShopContext.SaveChangesAsync();
+            catch (NullReferenceException exception)
+            {
+                return NotFound(exception.Message);
+            }
             return Ok();
         }
 
         [HttpPatch("add/{id}")]
         public async Task<IActionResult> AddToOrder(CustomerCart itemsToAdd, int id)
         {
-            var customer = await ShopContext.Customers.FirstOrDefaultAsync(c => c.Id.Equals(itemsToAdd.CustomerId));
-            if (customer is null)
+            try
             {
-                return BadRequest();
+                await OrderService.AddToOrder(itemsToAdd, id);
             }
-
-            var products = new List<Product>();
-
-            foreach (var prodId in itemsToAdd.ProductIds)
+            catch (NullReferenceException exception)
             {
-                var prod = await ShopContext.Products.FirstOrDefaultAsync(p => p.Id == prodId);
-                if (prod is null)
-                {
-                    return NotFound();
-                }
-                products.Add(prod);
+                return NotFound(exception.Message);
             }
-
-            var order = await ShopContext.Orders.Include(o => o.Customer).Include(o => o.Products).FirstOrDefaultAsync(o => o.Id == id);
-            order.ShippingDate = DateTime.Now.AddDays(5);
-            order.Products.AddRange(products);
-            await ShopContext.SaveChangesAsync();
 
             return Ok();
         }
@@ -110,26 +79,14 @@ namespace Server.Controllers
         [HttpPatch("remove/{id}")]
         public async Task<IActionResult> RemoveFromOrder(CustomerCart itemsToRemove, int id)
         {
-            var customer = await ShopContext.Customers.FirstOrDefaultAsync(c => c.Id.Equals(itemsToRemove.CustomerId));
-            if (customer is null)
+            try
             {
-                return BadRequest();
+                await OrderService.RemoveFromOrder(itemsToRemove, id);
             }
-
-            var order = await ShopContext.Orders.Include(o => o.Customer.Id == customer.Id).Include(o => o.Products).FirstOrDefaultAsync(o => o.Id == id);
-            order.ShippingDate = DateTime.Now.AddDays(5);
-
-            foreach (var prodId in itemsToRemove.ProductIds)
+            catch (NullReferenceException exception)
             {
-                var prod = order.Products.FirstOrDefault(p => p.Id == prodId);
-                if (prod is null)
-                {
-                    continue;
-                }
-                order.Products.Remove(prod);
+                return NotFound(exception.Message);
             }
-
-            await ShopContext.SaveChangesAsync();
 
             return Ok();
         }

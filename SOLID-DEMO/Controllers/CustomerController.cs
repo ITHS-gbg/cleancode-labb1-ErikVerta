@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Server.DataAccess;
+using Server.Interfaces;
 using Shared;
 
 namespace Server.Controllers
@@ -10,54 +9,69 @@ namespace Server.Controllers
     [Route("[controller]")]
     public class CustomerController : ControllerBase
     {
-        private ShopContext ShopContext { get; set; }
+        private ICustomerService CustomerService { get; set; }
 
-        public CustomerController(ShopContext shopContext)
+        public CustomerController(ICustomerService customerService)
         {
-            ShopContext = shopContext;
+            CustomerService = customerService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetCustomers()
         {
-            return Ok(await ShopContext.Customers.ToListAsync());
+            return Ok(await CustomerService.GetCustomers());
         }
 
         [HttpGet("{email}")]
         public async Task<IActionResult> GetCustomer(string email)
         {
-            return Ok(await ShopContext.Customers.FirstOrDefaultAsync(c => c.Name.Equals(email)));
+            var customer = await CustomerService.GetCustomer(email);
+            if (customer is null)
+            {
+                return NotFound("customer does not exist");
+            }
+            return Ok(customer);
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> RegisterUser(Customer customer)
         {
-            if (!customer.Name.Contains("@"))
-                throw new ValidationException("Email is not an email");
-            await ShopContext.AddAsync(customer);
-            await ShopContext.SaveChangesAsync();
+            try
+            {
+                await CustomerService.CreateCustomer(customer);
+            }
+            catch (ValidationException exception)
+            {
+                return BadRequest(exception.Message);
+            }
             return Ok();
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> LoginCustomer(string email, string password)
         {
-            var customer = await ShopContext.Customers.FirstOrDefaultAsync(c => c.Name.Equals(email) && c.Password.Equals(password));
-            if (customer is not null)
+            try
             {
-                return Ok();
+                await CustomerService.LoginCustomer(email, password);
             }
-            return BadRequest();
+            catch (ValidationException exception)
+            {
+                return BadRequest(exception.Message);
+            }
+            return Ok();
         }
 
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteCustomer(int id)
         {
-            var customer = await ShopContext.Customers.FirstOrDefaultAsync(c => c.Id == id);
-            if (customer is null) return BadRequest();
-
-            ShopContext.Customers.Remove(customer);
-            await ShopContext.SaveChangesAsync();
+            try
+            {
+                await CustomerService.DeleteCustomer(id);
+            }
+            catch (NullReferenceException exception)
+            {
+                return NotFound(exception.Message);
+            }
             return Ok();
         }
     }

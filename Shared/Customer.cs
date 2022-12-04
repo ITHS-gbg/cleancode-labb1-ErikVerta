@@ -1,14 +1,15 @@
-﻿namespace Shared
+﻿using System.Net.Http.Headers;
+
+namespace Shared
 {
-    public class Customer
+    public class Customer : EntityBase
     {
-        public int Id { get; init; }
-        public string Name { get; set; }
+        public string Email { get; set; }
         public string Password { get; set; }
         
-        public Customer(string name, string password)
+        public Customer(string email, string password)
         {
-            Name = name;
+            Email = email;
             Password = password;
         }
     }
