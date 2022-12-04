@@ -16,12 +16,24 @@ namespace Server.Repositories
 
         public async Task<T> GetAsync(string email)
         {
-            return _dbSet.FirstOrDefault(c => c.Email == email);
+            var customer = _dbSet.FirstOrDefault(c => c.Email == email);
+            if (customer is null)
+            {
+                throw new NullReferenceException("customer is null");
+            }
+
+            return customer;
         }
 
         public async Task<T> GetAsync(int id)
         {
-            return _dbSet.FirstOrDefault(c => c.Id == id);
+            var customer = _dbSet.FirstOrDefault(c => c.Id == id);
+            if (customer is null)
+            {
+                throw new NullReferenceException("customer is null");
+            }
+
+            return customer;
         }
 
 

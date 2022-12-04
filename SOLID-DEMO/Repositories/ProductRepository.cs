@@ -17,7 +17,13 @@ namespace Server.Repositories
 
         public async Task<T> GetAsync(int id)
         {
-            return _dbSet.FirstOrDefault(p => p.Id == id);
+            var product = _dbSet.FirstOrDefault(p => p.Id == id);
+            if (product is null)
+            {
+                throw new NullReferenceException("product is null");
+            }
+
+            return product;
         }
     }
 }

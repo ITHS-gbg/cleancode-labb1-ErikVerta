@@ -46,10 +46,6 @@ namespace Server.Services
         public async Task DeleteCustomer(int id)
         {
             var customer = await UnitOfWork.CustomerRepository.GetAsync(id);
-            if (customer is null)
-            {
-                throw new NullReferenceException($"customer is null");
-            }
 
             await UnitOfWork.CustomerRepository.DeleteAsync(customer);
             await UnitOfWork.SaveAsync();

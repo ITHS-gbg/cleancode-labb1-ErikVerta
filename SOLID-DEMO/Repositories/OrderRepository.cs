@@ -12,11 +12,16 @@ namespace Server.Repositories
 
         public async Task<T> GetAsync(int id)
         {
-            return await _dbSet
+            var order = await _dbSet
                 .Include(o => o.Customer)
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Product)
                 .FirstOrDefaultAsync(o => o.Id == id);
+            if (order is null)
+            {
+                throw new NullReferenceException("order is null");
+            }
+            return order;
         }
 
         public override async Task<IEnumerable<T>> GetAllAsync()

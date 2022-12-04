@@ -25,12 +25,15 @@ namespace Server.Controllers
         [HttpGet("{email}")]
         public async Task<IActionResult> GetCustomer(string email)
         {
-            var customer = await CustomerService.GetCustomer(email);
-            if (customer is null)
+            try
             {
-                return NotFound("customer does not exist");
+                var customer = await CustomerService.GetCustomer(email);
+                return Ok(customer);
             }
-            return Ok(customer);
+            catch (NullReferenceException exception)
+            {
+                return NotFound(exception.Message);
+            }
         }
 
         [HttpPost("register")]
