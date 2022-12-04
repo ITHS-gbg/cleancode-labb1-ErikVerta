@@ -24,13 +24,15 @@ namespace Server.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProduct(int id)
         {
-            var product = await ProductService.GetProduct(id);
-            if (product is null)
+            try
             {
-                return NotFound("product does not exist");
+                var product = await ProductService.GetProduct(id);
+                return Ok(product);
             }
-
-            return Ok();
+            catch (NullReferenceException exception)
+            {
+                return NotFound(exception.Message);
+            }
         }
 
         [HttpPost]

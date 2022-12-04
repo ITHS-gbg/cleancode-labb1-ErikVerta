@@ -24,19 +24,11 @@ namespace Server.Services
         public async Task CreateOrder(CustomerCart customerCart)
         {
             var customer = await UnitOfWork.CustomerRepository.GetAsync(customerCart.CustomerId);
-            if (customer is null)
-            {
-                throw new NullReferenceException("customer is null");
-            }
             var orderItems = new List<OrderItem>();
 
             foreach (var prodId in customerCart.ProductIds)
             {
                 var prod = await UnitOfWork.ProductRepository.GetAsync(prodId);
-                if (prod is null)
-                {
-                    throw new NullReferenceException("product is null");
-                }
 
                 var orderItem = orderItems.FirstOrDefault(oi => oi.Product == prod);
                 if (orderItem is null)
@@ -60,10 +52,6 @@ namespace Server.Services
         public async Task DeleteOrder(int id)
         {
             var order = await UnitOfWork.OrderRepository.GetAsync(id);
-            if (order is null)
-            {
-                throw new NullReferenceException("order is null");
-            }
 
             await UnitOfWork.OrderRepository.DeleteAsync(order);
             await UnitOfWork.SaveAsync();
@@ -72,24 +60,12 @@ namespace Server.Services
         public async Task AddToOrder(CustomerCart itemsToAdd, int id)
         {
             var customer = await UnitOfWork.CustomerRepository.GetAsync(itemsToAdd.CustomerId);
-            if (customer is null)
-            {
-                throw new NullReferenceException("customer is null");
-            }
 
             var order = await UnitOfWork.OrderRepository.GetAsync(id);
-            if (order is null)
-            {
-                throw new NullReferenceException("order is null");
-            }
 
             foreach (var prodId in itemsToAdd.ProductIds)
             {
                 var prod = await UnitOfWork.ProductRepository.GetAsync(prodId);
-                if (prod is null)
-                {
-                    throw new NullReferenceException("product is null");
-                }
 
                 var orderItem = order.OrderItems.FirstOrDefault(oi => oi.ProductId == prodId);
                 if (orderItem is null)
@@ -109,25 +85,13 @@ namespace Server.Services
         public async Task RemoveFromOrder(CustomerCart itemsToRemove, int id)
         {
             var customer = await UnitOfWork.CustomerRepository.GetAsync(itemsToRemove.CustomerId);
-            if (customer is null)
-            {
-                throw new NullReferenceException("customer is null");
-            }
 
             var order = await UnitOfWork.OrderRepository.GetAsync(id);
-            if (order is null)
-            {
-                throw new NullReferenceException("order is null");
-            }
             order.ShippingDate = DateTime.Now.AddDays(5);
 
             foreach (var prodId in itemsToRemove.ProductIds)
             {
                 var prod = await UnitOfWork.ProductRepository.GetAsync(prodId);
-                if (prod is null)
-                {
-                    throw new NullReferenceException("product is null");
-                }
 
                 var orderItem = order.OrderItems.FirstOrDefault(oi => oi.ProductId == prodId);
                 if (orderItem is null)
